@@ -1,7 +1,7 @@
 ---
 title: "WB - LRSP Monitoring survey - 2025"
 author: ""
-date: "[March 24, 2024 | 06:00 AM]"
+date: "[March 25, 2024 | 06:00 AM]"
 output: 
   flexdashboard::flex_dashboard:
     
@@ -163,20 +163,19 @@ Row
 -----------------------------------------------------------------------
 
 
-### NO. OF HH SURVEY INTERVIEWS BY Kebele {data-width=300}
+### NO. OF HH SURVEY INTERVIEWS BY KEBELE {data-width=300}
 
 ```{r}
 library(dplyr)
 library(highcharter)
 
-# Prepare data
+# ==== Kebele Chart with Fullscreen on Click ====
 kebele_data <- data_hh %>%
   count(kebele, name = "Total") %>%
   arrange(desc(Total))
 
 avg_count <- mean(kebele_data$Total)
 
-# Highcharter Bar Chart
 hchart(kebele_data, "bar", hcaes(x = kebele, y = Total),
        color = color_stops(n = nrow(kebele_data),
                            colors = c("#F72585", "#B5179E", "#7209B7", "#3A0CA3", "#4361EE", "#4CC9F0"))
@@ -185,7 +184,7 @@ hchart(kebele_data, "bar", hcaes(x = kebele, y = Total),
   hc_subtitle(text = paste("Average Interviews per Kebele:", round(avg_count, 1))) %>%
   hc_xAxis(title = list(text = "Kebele")) %>%
   hc_yAxis(
-    title = list(text = "Number of Interviews"),
+    title = list(text = "Number of Household Interviews"),
     plotLines = list(
       list(
         value = avg_count,
@@ -201,7 +200,16 @@ hchart(kebele_data, "bar", hcaes(x = kebele, y = Total),
     dataLabels = list(enabled = TRUE, format = '{point.y}'),
     borderRadius = 5,
     groupPadding = 0.1,
-    pointPadding = 0.1
+    pointPadding = 0.1,
+    point = list(
+      events = list(
+        click = JS("function () {
+          if (this.series.chart.fullscreen) {
+            this.series.chart.fullscreen.toggle();
+          }
+        }")
+      )
+    )
   )) %>%
   hc_tooltip(
     backgroundColor = "#ffffff",
@@ -211,11 +219,55 @@ hchart(kebele_data, "bar", hcaes(x = kebele, y = Total),
   hc_chart(
     backgroundColor = "#f5f7fa",
     style = list(fontFamily = "Inter, sans-serif")
+  ) %>%
+  hc_exporting(enabled = TRUE)
+
+
+# ==== Woreda Chart with Fullscreen on Click ====
+data_woreda <- data_hh %>%
+  filter(!is.na(woreda)) %>%
+  count(woreda, name = "Total") %>%
+  arrange(desc(Total))
+
+hchart(
+  data_woreda,
+  "bar",
+  hcaes(x = woreda, y = Total),
+  color = color_stops(
+    n = nrow(data_woreda),
+    colors = c("#F65A83", "#FF1E00", "#21E1E1", "#28a745", "#224B0C")
   )
+) %>%
+  hc_title(text = "📊 Total Interviews by Woreda") %>%
+  hc_subtitle(text = "Bar chart showing total interview count per woreda") %>%
+  hc_xAxis(title = list(text = "Woreda")) %>%
+  hc_yAxis(title = list(text = "Number of Interviews")) %>%
+  hc_tooltip(
+    pointFormat = "<b>{point.woreda}</b>: <b>{point.Total}</b> interviews"
+  ) %>%
+  hc_plotOptions(bar = list(
+    dataLabels = list(enabled = TRUE),
+    borderRadius = 3,
+    point = list(
+      events = list(
+        click = JS("function () {
+          if (this.series.chart.fullscreen) {
+            this.series.chart.fullscreen.toggle();
+          }
+        }")
+      )
+    )
+  )) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  ) %>%
+  hc_exporting(enabled = TRUE)
+
 
 ```
 
-### NO. OF HH SURVEY INTERVIEWS BY Woreda {data-width=300}
+### NO. OF HH SURVEY INTERVIEWS BY WOREDA {data-width=300}
 
 ```{r}
 library(dplyr)
@@ -255,7 +307,111 @@ hchart(
 
 ```
 
-### NO. OF LRSP Monitoring SURVEY INTERVIEWS BY Woreda {data-width=300}
+### NO. OF LRSP Monitoring SURVEY INTERVIEWS BY KEBELE {data-width=300}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# ==== Kebele Chart with Fullscreen on Click ====
+kebele_data <- data_mo %>%
+  count(kebele, name = "Total") %>%
+  arrange(desc(Total))
+
+avg_count <- mean(kebele_data$Total)
+
+hchart(kebele_data, "bar", hcaes(x = kebele, y = Total),
+       color = color_stops(n = nrow(kebele_data),
+                           colors = c("#F72585", "#B5179E", "#7209B7", "#3A0CA3", "#4361EE", "#4CC9F0"))
+) %>%
+  hc_title(text = "🌍 Interview Count by Kebele") %>%
+  hc_subtitle(text = paste("Average Interviews per Kebele:", round(avg_count, 1))) %>%
+  hc_xAxis(title = list(text = "Kebele")) %>%
+  hc_yAxis(
+    title = list(text = "Number of LRSP Monitoring Interviews"),
+    plotLines = list(
+      list(
+        value = avg_count,
+        color = "#FF8C00",
+        width = 2,
+        dashStyle = "Dash",
+        label = list(text = paste("Average: ", round(avg_count, 1)),
+                     style = list(color = "#FF8C00", fontWeight = "bold"))
+      )
+    )
+  ) %>%
+  hc_plotOptions(bar = list(
+    dataLabels = list(enabled = TRUE, format = '{point.y}'),
+    borderRadius = 5,
+    groupPadding = 0.1,
+    pointPadding = 0.1,
+    point = list(
+      events = list(
+        click = JS("function () {
+          if (this.series.chart.fullscreen) {
+            this.series.chart.fullscreen.toggle();
+          }
+        }")
+      )
+    )
+  )) %>%
+  hc_tooltip(
+    backgroundColor = "#ffffff",
+    borderColor = "#ccc",
+    pointFormat = "<b>{point.kebele}</b><br>Interviews: <b>{point.Total}</b>"
+  ) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  ) %>%
+  hc_exporting(enabled = TRUE)
+
+
+# ==== Woreda Chart with Fullscreen on Click ====
+data_woreda <- data_hh %>%
+  filter(!is.na(woreda)) %>%
+  count(woreda, name = "Total") %>%
+  arrange(desc(Total))
+
+hchart(
+  data_woreda,
+  "bar",
+  hcaes(x = woreda, y = Total),
+  color = color_stops(
+    n = nrow(data_woreda),
+    colors = c("#F65A83", "#FF1E00", "#21E1E1", "#28a745", "#224B0C")
+  )
+) %>%
+  hc_title(text = "📊 Total Interviews by Woreda") %>%
+  hc_subtitle(text = "Bar chart showing total interview count per woreda") %>%
+  hc_xAxis(title = list(text = "Woreda")) %>%
+  hc_yAxis(title = list(text = "Number of Interviews")) %>%
+  hc_tooltip(
+    pointFormat = "<b>{point.woreda}</b>: <b>{point.Total}</b> interviews"
+  ) %>%
+  hc_plotOptions(bar = list(
+    dataLabels = list(enabled = TRUE),
+    borderRadius = 3,
+    point = list(
+      events = list(
+        click = JS("function () {
+          if (this.series.chart.fullscreen) {
+            this.series.chart.fullscreen.toggle();
+          }
+        }")
+      )
+    )
+  )) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  ) %>%
+  hc_exporting(enabled = TRUE)
+
+
+```
+
+### NO. OF LRSP Monitoring SURVEY INTERVIEWS BY WOREDA {data-width=300}
 
 ```{r}
 library(dplyr)
@@ -299,71 +455,72 @@ Column
 ### NO. OF LRSP MONITORING SURVEY INTERVIEWS DONE BY DATE {data-width=400}
 
 ```{r }
-# Load required libraries
 library(dplyr)
 library(tidyr)
 library(lubridate)
 library(highcharter)
 
-# Step 1: Clean and prepare date-wise data
+# Prepare data
 data_date <- data_mo %>%
-  mutate(date = as.Date(date)) %>%          # Convert to Date type
-  filter(!is.na(date)) %>%                  # Remove NAs
-  count(date, name = "Total") %>%           # Count interviews per date
+  mutate(date = as.Date(date)) %>%
+  filter(!is.na(date)) %>%
+  count(date, name = "Total") %>%
   arrange(date)
 
-# Step 2: Create full sequence of dates (fills missing days with 0s)
-start_date <- min(data_date$date, na.rm = TRUE)
-end_date   <- max(data_date$date, na.rm = TRUE)
+# Fill missing dates
+date_full <- data.frame(date = seq.Date(min(data_date$date), max(data_date$date), by = "day"))
 
-date_full <- data.frame(date = seq.Date(start_date, end_date, by = "day"))
-
-# Step 3: Merge with actual data and fill in missing days
 data_clean <- date_full %>%
   left_join(data_date, by = "date") %>%
   replace_na(list(Total = 0))
 
-# Step 4: Plot the clean green line chart
+# Render the chart
 hchart(
   data_clean,
   type = "line",
   hcaes(x = date, y = Total),
-  color = "#28a745"  # Clean green line
+  color = "#28a745"
 ) %>%
   hc_title(text = "📈 Daily Interview Count") %>%
   hc_subtitle(text = "LRSP MONITORING SURVEY INTERVIEWS DONE BY DATE") %>%
   hc_xAxis(
     type = "datetime",
     title = list(text = "Date"),
-    labels = list(format = "{value:%b %d}"),
-    lineColor = "#ccc",
-    gridLineWidth = 0.5
+    labels = list(format = "{value:%b %d}")
   ) %>%
   hc_yAxis(
     title = list(text = "Number of Interviews"),
-    min = 0,
-    gridLineDashStyle = "ShortDash"
+    min = 0
   ) %>%
   hc_tooltip(
     xDateFormat = "%A, %b %d",
-    pointFormat = "<b>{point.Total}</b> interviews",
-    backgroundColor = "#f0fff0",
-    borderColor = "#28a745"
+    pointFormat = "<b>{point.Total}</b> interviews"
   ) %>%
-  hc_plotOptions(line = list(
-    lineWidth = 4,
-    marker = list(
-      enabled = TRUE,
-      radius = 4,
-      fillColor = "#ffffff",
-      lineColor = "#28a745",
-      lineWidth = 2
-    ),
-    dataLabels = list(enabled = FALSE)
-  )) %>%
+  hc_plotOptions(
+    series = list(
+      cursor = "pointer",
+      point = list(
+        events = list(
+          click = JS("
+            function () {
+              if (this.series.chart.fullscreen) {
+                this.series.chart.fullscreen.toggle();
+              }
+            }
+          ")
+        )
+      )
+    )
+  ) %>%
   hc_chart(
     backgroundColor = "#f7fcf8",
     style = list(fontFamily = "Inter, sans-serif")
+  ) %>%
+  hc_exporting(
+    enabled = TRUE,
+    buttons = list(
+      contextButton = list(enabled = FALSE)  # Removes export menu (burger)
+    )
   )
 
 

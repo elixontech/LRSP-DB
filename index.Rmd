@@ -1,0 +1,759 @@
+---
+title: "WB - LRSP Monitoring survey - 2025"
+author: ""
+date: "[Mar 22, 2024 | 10:00 AM]"
+output: 
+  flexdashboard::flex_dashboard:
+    
+    
+    orientation: row
+    vertical_layout: fill
+    logo: logo.png
+runtime: shiny
+
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(haven)
+library(plyr)
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(highcharter)
+library(plotly)
+library(DT)
+library(stringr)
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+library(reshape2)
+library(ggalt)
+library(treemap)
+library(networkD3)
+library(reshape2)
+library(fmsb)
+library(leaflet)
+
+```
+
+```{r}
+# Load required libraries
+library(haven)
+library(dplyr)
+
+# Read the Stata .dta file
+data_mo <- read_dta("D:/Projects/LRSP/LRSP-dashboard-main/LRSP/_LRSP_Monitoring_Survey_Final.dta")
+
+# Convert all labelled variables to factors
+data_mo <- data_mo %>% mutate(across(everything(), ~ as_factor(.)))
+
+```
+
+```{r}
+# Load required libraries
+library(haven)
+library(dplyr)
+
+# Read the Stata .dta file
+data_hh <- read_dta("D:/Projects/LRSP/LRSP-dashboard-main/LRSP/_LRSP_HH_Monitoring_Survey_Final.dta")
+
+# Convert all labelled variables to factors
+data_hh <- data_hh %>% mutate(across(everything(), ~ as_factor(.)))
+
+```
+
+HOME
+=====================================
+Row
+-----------------------------------------------------------------------
+
+
+### TOTAL SYNCED LRSP MONITORING SURVEY
+
+```{r, echo=FALSE, results='asis'}
+library(haven)
+library(dplyr)
+
+# Load and prepare data
+data_mo <- read_dta("D:/Projects/LRSP/LRSP-dashboard-main/LRSP/_LRSP_Monitoring_Survey_Final.dta")
+data_mo <- data_mo %>% mutate(across(everything(), ~ as_factor(.)))
+total_interview <- nrow(data_mo)
+
+# Create a styled value box with a simple hover effect
+cat(sprintf('
+<style>
+.hover-box {
+  background-color: #007bff;
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  width: 600px;
+  margin: 30px auto;
+  transition: transform 0.3s ease;
+  font-family: Arial, sans-serif;
+}
+.hover-box:hover {
+  transform: scale(1.05);
+}
+.hover-box .title {
+  font-size: 20px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+.hover-box .value {
+  font-size: 48px;
+}
+</style>
+
+<div class="hover-box">
+  <div class="title">Total LRSP synced Interviews</div>
+  <div class="value">%s</div>
+</div>
+', total_interview))
+```
+
+
+### TOTAL SYNCED HOUSEHOLD SURVEY
+
+```{r, echo=FALSE, results='asis'}
+library(haven)
+library(dplyr)
+
+# Load and prepare data
+
+total_interview <- nrow(data_hh)
+
+# Create a styled value box with a simple hover effect
+cat(sprintf('
+<style>
+.hover-box {
+  background-color: #007bff;
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  width: 600px;
+  margin: 30px auto;
+  transition: transform 0.3s ease;
+  font-family: Arial, sans-serif;
+}
+.hover-box:hover {
+  transform: scale(1.05);
+}
+.hover-box .title {
+  font-size: 20px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+.hover-box .value {
+  font-size: 48px;
+}
+</style>
+
+<div class="hover-box">
+  <div class="title">Total Household synced Interviews</div>
+  <div class="value">%s</div>
+</div>
+', total_interview))
+```
+
+Row
+-----------------------------------------------------------------------
+
+
+### NO. OF HH SURVEY INTERVIEWS BY Kebele {data-width=300}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Prepare data
+kebele_data <- data_hh %>%
+  count(kebele, name = "Total") %>%
+  arrange(desc(Total))
+
+avg_count <- mean(kebele_data$Total)
+
+# Highcharter Bar Chart
+hchart(kebele_data, "bar", hcaes(x = kebele, y = Total),
+       color = color_stops(n = nrow(kebele_data),
+                           colors = c("#F72585", "#B5179E", "#7209B7", "#3A0CA3", "#4361EE", "#4CC9F0"))
+) %>%
+  hc_title(text = "🌍 Interview Count by Kebele") %>%
+  hc_subtitle(text = paste("Average Interviews per Kebele:", round(avg_count, 1))) %>%
+  hc_xAxis(title = list(text = "Kebele")) %>%
+  hc_yAxis(
+    title = list(text = "Number of Interviews"),
+    plotLines = list(
+      list(
+        value = avg_count,
+        color = "#FF8C00",
+        width = 2,
+        dashStyle = "Dash",
+        label = list(text = paste("Average: ", round(avg_count, 1)),
+                     style = list(color = "#FF8C00", fontWeight = "bold"))
+      )
+    )
+  ) %>%
+  hc_plotOptions(bar = list(
+    dataLabels = list(enabled = TRUE, format = '{point.y}'),
+    borderRadius = 5,
+    groupPadding = 0.1,
+    pointPadding = 0.1
+  )) %>%
+  hc_tooltip(
+    backgroundColor = "#ffffff",
+    borderColor = "#ccc",
+    pointFormat = "<b>{point.kebele}</b><br>Interviews: <b>{point.Total}</b>"
+  ) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  )
+
+```
+
+### NO. OF HH SURVEY INTERVIEWS BY Woreda {data-width=300}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Step 1: Count total interviews by woreda
+data_woreda <- data_hh %>%
+  filter(!is.na(woreda)) %>%
+  count(woreda, name = "Total") %>%
+  arrange(desc(Total))
+
+# Step 2: Plot bar chart
+hchart(
+  data_woreda,
+  "bar",
+  hcaes(x = woreda, y = Total),
+  color = color_stops(
+    n = 5,
+    colors = c("#F65A83", "#FF1E00", "#21E1E1", "#28a745", "#224B0C")
+  )
+) %>%
+  hc_title(text = "📊 Total Interviews by Woreda") %>%
+  hc_subtitle(text = "Bar chart showing total interview count per woreda") %>%
+  hc_xAxis(title = list(text = "Woreda")) %>%
+  hc_yAxis(title = list(text = "Number of Interviews")) %>%
+  hc_tooltip(
+    pointFormat = "<b>{point.woreda}</b>: <b>{point.Total}</b> interviews"
+  ) %>%
+  hc_plotOptions(bar = list(
+    dataLabels = list(enabled = TRUE),
+    borderRadius = 3
+  )) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  )
+
+```
+
+### NO. OF LRSP Monitoring SURVEY INTERVIEWS BY Woreda {data-width=300}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Step 1: Count total interviews by woreda
+data_woreda <- data_mo %>%
+  filter(!is.na(woreda)) %>%
+  count(woreda, name = "Total") %>%
+  arrange(desc(Total))
+
+# Step 2: Plot bar chart
+hchart(
+  data_woreda,
+  "bar",
+  hcaes(x = woreda, y = Total),
+  color = color_stops(
+    n = 5,
+    colors = c("#F65A83", "#FF1E00", "#21E1E1", "#28a745", "#224B0C")
+  )
+) %>%
+  hc_title(text = "📊 Total Interviews LRSP by Woreda") %>%
+  hc_subtitle(text = "Bar chart showing total interview count per woreda") %>%
+  hc_xAxis(title = list(text = "Woreda")) %>%
+  hc_yAxis(title = list(text = "Number of Interviews")) %>%
+  hc_tooltip(
+    pointFormat = "<b>{point.woreda}</b>: <b>{point.Total}</b> interviews"
+  ) %>%
+  hc_plotOptions(bar = list(
+    dataLabels = list(enabled = TRUE),
+    borderRadius = 3
+  )) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  )
+
+```
+Column 
+-----------------------------------------------------------------------
+### NO. OF LRSP MONITORING SURVEY INTERVIEWS DONE BY DATE {data-width=400}
+
+```{r }
+# Load required libraries
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(highcharter)
+
+# Step 1: Clean and prepare date-wise data
+data_date <- data_mo %>%
+  mutate(date = as.Date(date)) %>%          # Convert to Date type
+  filter(!is.na(date)) %>%                  # Remove NAs
+  count(date, name = "Total") %>%           # Count interviews per date
+  arrange(date)
+
+# Step 2: Create full sequence of dates (fills missing days with 0s)
+start_date <- min(data_date$date, na.rm = TRUE)
+end_date   <- max(data_date$date, na.rm = TRUE)
+
+date_full <- data.frame(date = seq.Date(start_date, end_date, by = "day"))
+
+# Step 3: Merge with actual data and fill in missing days
+data_clean <- date_full %>%
+  left_join(data_date, by = "date") %>%
+  replace_na(list(Total = 0))
+
+# Step 4: Plot the clean green line chart
+hchart(
+  data_clean,
+  type = "line",
+  hcaes(x = date, y = Total),
+  color = "#28a745"  # Clean green line
+) %>%
+  hc_title(text = "📈 Daily Interview Count") %>%
+  hc_subtitle(text = "LRSP MONITORING SURVEY INTERVIEWS DONE BY DATE") %>%
+  hc_xAxis(
+    type = "datetime",
+    title = list(text = "Date"),
+    labels = list(format = "{value:%b %d}"),
+    lineColor = "#ccc",
+    gridLineWidth = 0.5
+  ) %>%
+  hc_yAxis(
+    title = list(text = "Number of Interviews"),
+    min = 0,
+    gridLineDashStyle = "ShortDash"
+  ) %>%
+  hc_tooltip(
+    xDateFormat = "%A, %b %d",
+    pointFormat = "<b>{point.Total}</b> interviews",
+    backgroundColor = "#f0fff0",
+    borderColor = "#28a745"
+  ) %>%
+  hc_plotOptions(line = list(
+    lineWidth = 4,
+    marker = list(
+      enabled = TRUE,
+      radius = 4,
+      fillColor = "#ffffff",
+      lineColor = "#28a745",
+      lineWidth = 2
+    ),
+    dataLabels = list(enabled = FALSE)
+  )) %>%
+  hc_chart(
+    backgroundColor = "#f7fcf8",
+    style = list(fontFamily = "Inter, sans-serif")
+  )
+
+
+```
+
+### NO. OF LRSP HH SURVEY INTERVIEWS DONE BY DATE {data-width=400}
+```{r}
+# Load required libraries
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(highcharter)
+
+# Step 1: Clean and prepare date-wise data
+data_date <- data_hh %>%
+  mutate(date = as.Date(date)) %>%          # Convert to Date type
+  filter(!is.na(date)) %>%                  # Remove NAs
+  count(date, name = "Total") %>%           # Count interviews per date
+  arrange(date)
+
+# Step 2: Create full sequence of dates (fills missing days with 0s)
+start_date <- min(data_date$date, na.rm = TRUE)
+end_date   <- max(data_date$date, na.rm = TRUE)
+
+date_full <- data.frame(date = seq.Date(start_date, end_date, by = "day"))
+
+# Step 3: Merge with actual data and fill in missing days
+data_clean <- date_full %>%
+  left_join(data_date, by = "date") %>%
+  replace_na(list(Total = 0))
+
+# Step 4: Plot the clean green line chart
+hchart(
+  data_clean,
+  type = "line",
+  hcaes(x = date, y = Total),
+  color = "#28a745"  # Clean green line
+) %>%
+  hc_title(text = "📈 Daily Interview Count") %>%
+  hc_subtitle(text = "LRSP HH SURVEY INTERVIEWS DONE BY DATE") %>%
+  hc_xAxis(
+    type = "datetime",
+    title = list(text = "Date"),
+    labels = list(format = "{value:%b %d}"),
+    lineColor = "#ccc",
+    gridLineWidth = 0.5
+  ) %>%
+  hc_yAxis(
+    title = list(text = "Number of Interviews"),
+    min = 0,
+    gridLineDashStyle = "ShortDash"
+  ) %>%
+  hc_tooltip(
+    xDateFormat = "%A, %b %d",
+    pointFormat = "<b>{point.Total}</b> interviews",
+    backgroundColor = "#f0fff0",
+    borderColor = "#28a745"
+  ) %>%
+  hc_plotOptions(line = list(
+    lineWidth = 4,
+    marker = list(
+      enabled = TRUE,
+      radius = 4,
+      fillColor = "#ffffff",
+      lineColor = "#28a745",
+      lineWidth = 2
+    ),
+    dataLabels = list(enabled = FALSE)
+  )) %>%
+  hc_chart(
+    backgroundColor = "#f7fcf8",
+    style = list(fontFamily = "Inter, sans-serif")
+  )
+
+```
+
+
+VISIT REPORT LRSP
+=====================================
+
+Row
+-----------------------------------------------------------------------
+
+### LRSP MONITORING SURVEY INTERVIEWS BY VISIT {data-width=300}
+
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Group and count interviews by 'visit'
+visit_summary <- data_mo %>%
+  filter(!is.na(visit)) %>%
+  count(visit, name = "Total") %>%
+  arrange(desc(Total))
+
+# Plot bar chart
+hchart(
+  visit_summary,
+  "column",
+  hcaes(x = visit, y = Total),
+  color = "#28a745"  # Green color for style
+) %>%
+  hc_title(text = "📋 Number of Interviews by Visit") %>%
+  hc_subtitle(text = "Bar chart showing count of interviews per visit round of LRSP Monitoring Survey") %>%
+  hc_xAxis(title = list(text = "Visit Type")) %>%
+  hc_yAxis(title = list(text = "Number of Interviews"), min = 0) %>%
+  hc_tooltip(pointFormat = "<b>{point.visit}</b>: <b>{point.Total}</b> interviews") %>%
+  hc_plotOptions(column = list(
+    dataLabels = list(enabled = TRUE),
+    borderRadius = 3
+  )) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  )
+
+```
+### LRSP MONITORING SURVEY INTERVIEWS BY VISIT {data-width=300}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Prepare data: count interviews by 'visit'
+visit_summary <- data_mo %>%
+  filter(!is.na(visit)) %>%
+  count(visit, name = "Total") %>%
+  arrange(desc(Total))
+
+# Create donut chart
+hchart(
+  visit_summary,
+  "pie",
+  hcaes(name = visit, y = Total)
+) %>%
+  hc_title(text = "🍩 Interviews by Visit Round") %>%
+  hc_subtitle(text = "Donut chart showing interview counts per visit round of LRSP Monitoring Survey") %>%
+  hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
+  hc_plotOptions(
+    pie = list(
+      innerSize = '60%',  # This creates the donut hole
+      allowPointSelect = TRUE,
+      cursor = "pointer",
+      dataLabels = list(
+        enabled = TRUE,
+        format = "<b>{point.name}</b>: {point.percentage:.1f} %",
+        distance = -30,
+        style = list(color = "white", fontWeight = "bold")
+      ),
+      showInLegend = TRUE
+    )
+  ) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  ) %>%
+  hc_colors(c("#28a745", "#FF6B6B", "#1E90FF", "#FFC107", "#8E44AD", "#00B894"))
+
+```
+
+
+Column 
+-----------------------------------------------------------------------
+
+### NO. OF LRSP INTERVIEWS DONE BY KEBELE {data-width=400}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Summarize interview counts by kebele
+kebele_summary <- data_mo %>%
+  filter(!is.na(kebele)) %>%
+  count(kebele, name = "Total") %>%
+  arrange(desc(Total))
+
+# Create pie chart
+hchart(
+  kebele_summary,
+  "pie",
+  hcaes(name = kebele, y = Total)
+) %>%
+  hc_title(text = "🥧 Interview Distribution by Kebele") %>%
+  hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
+  hc_plotOptions(
+    pie = list(
+      allowPointSelect = TRUE,
+      cursor = "pointer",
+      dataLabels = list(
+        enabled = TRUE,
+        format = "<b>{point.name}</b>: {point.percentage:.1f} %"
+      )
+    )
+  ) %>%
+  hc_chart(backgroundColor = "#f9f9f9")
+
+```
+
+
+### NO. OF LRSP INTERVIEWS DONE BY WOREDA {data-width=400}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Summarize interview counts by woreda
+woreda_summary <- data_mo %>%
+  filter(!is.na(woreda)) %>%
+  count(woreda, name = "Total") %>%
+  arrange(desc(Total))
+
+# Create pie chart
+hchart(
+  woreda_summary,
+  "pie",
+  hcaes(name = woreda, y = Total)
+) %>%
+  hc_title(text = "🥧 Interview Distribution by Woreda") %>%
+  hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
+  hc_plotOptions(
+    pie = list(
+      allowPointSelect = TRUE,
+      cursor = "pointer",
+      dataLabels = list(
+        enabled = TRUE,
+        format = "<b>{point.name}</b>: {point.percentage:.1f} %"
+      )
+    )
+  ) %>%
+  hc_chart(backgroundColor = "#f9f9f9")
+
+```
+
+
+
+VISIT REPORT HH
+=====================================
+
+Row
+-----------------------------------------------------------------------
+
+### LRSP HH SURVEY INTERVIEWS BY VISIT {data-width=300}
+
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Group and count interviews by 'visit'
+visit_summary <- data_hh %>%
+  filter(!is.na(visit)) %>%
+  count(visit, name = "Total") %>%
+  arrange(desc(Total))
+
+# Plot bar chart
+hchart(
+  visit_summary,
+  "column",
+  hcaes(x = visit, y = Total),
+  color = "#28a745"  # Green color for style
+) %>%
+  hc_title(text = "📋 Number of Interviews by Visit") %>%
+  hc_subtitle(text = "Bar chart showing count of interviews per visit round of LRSP Household Survey") %>%
+  hc_xAxis(title = list(text = "Visit Type")) %>%
+  hc_yAxis(title = list(text = "Number of Interviews"), min = 0) %>%
+  hc_tooltip(pointFormat = "<b>{point.visit}</b>: <b>{point.Total}</b> interviews") %>%
+  hc_plotOptions(column = list(
+    dataLabels = list(enabled = TRUE),
+    borderRadius = 3
+  )) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  )
+
+```
+### LRSP HH SURVEY INTERVIEWS BY VISIT {data-width=300}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Prepare data: count interviews by 'visit'
+visit_summary <- data_hh %>%
+  filter(!is.na(visit)) %>%
+  count(visit, name = "Total") %>%
+  arrange(desc(Total))
+
+# Create donut chart
+hchart(
+  visit_summary,
+  "pie",
+  hcaes(name = visit, y = Total)
+) %>%
+  hc_title(text = "🍩 Interviews by Visit Round") %>%
+  hc_subtitle(text = "Donut chart showing interview counts per visit round of LRSP Household Survey") %>%
+  hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
+  hc_plotOptions(
+    pie = list(
+      innerSize = '60%',  # Donut hole
+      allowPointSelect = TRUE,
+      cursor = "pointer",
+      dataLabels = list(
+        enabled = TRUE,
+        format = "<b>{point.name}</b>: {point.percentage:.1f} %",
+        distance = -30,
+        style = list(color = "white", fontWeight = "bold")
+      ),
+      showInLegend = TRUE
+    )
+  ) %>%
+  hc_chart(
+    backgroundColor = "#f5f7fa",
+    style = list(fontFamily = "Inter, sans-serif")
+  ) %>%
+  hc_colors(c("#28a745", "#FF6B6B", "#1E90FF", "#FFC107", "#8E44AD", "#00B894"))
+
+```
+
+
+Column 
+-----------------------------------------------------------------------
+
+### NO. OF HH INTERVIEWS DONE BY KEBELE {data-width=400}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Summarize interview counts by kebele
+kebele_summary <- data_hh %>%
+  filter(!is.na(kebele)) %>%
+  count(kebele, name = "Total") %>%
+  arrange(desc(Total))
+
+# Create pie chart
+hchart(
+  kebele_summary,
+  "pie",
+  hcaes(name = kebele, y = Total)
+) %>%
+  hc_title(text = "🥧 Interview Distribution by Kebele") %>%
+  hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
+  hc_plotOptions(
+    pie = list(
+      allowPointSelect = TRUE,
+      cursor = "pointer",
+      dataLabels = list(
+        enabled = TRUE,
+        format = "<b>{point.name}</b>: {point.percentage:.1f} %"
+      )
+    )
+  ) %>%
+  hc_chart(backgroundColor = "#f9f9f9")
+
+```
+
+
+### NO. OF HH INTERVIEWS DONE BY WOREDA {data-width=400}
+
+```{r}
+library(dplyr)
+library(highcharter)
+
+# Summarize interview counts by woreda
+woreda_summary <- data_hh %>%
+  filter(!is.na(woreda)) %>%
+  count(woreda, name = "Total") %>%
+  arrange(desc(Total))
+
+# Create pie chart
+hchart(
+  woreda_summary,
+  "pie",
+  hcaes(name = woreda, y = Total)
+) %>%
+  hc_title(text = "🥧 Interview Distribution by Woreda") %>%
+  hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
+  hc_plotOptions(
+    pie = list(
+      allowPointSelect = TRUE,
+      cursor = "pointer",
+      dataLabels = list(
+        enabled = TRUE,
+        format = "<b>{point.name}</b>: {point.percentage:.1f} %"
+      )
+    )
+  ) %>%
+  hc_chart(backgroundColor = "#f9f9f9")
+
+```
+

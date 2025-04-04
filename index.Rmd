@@ -1,7 +1,7 @@
 ---
 title: "WB - LRSP Monitoring survey - 2025"
 author: ""
-date: "[March 25, 2024 | 06:00 AM]"
+date: "[April 05, 2025 | 01:00 AM]"
 output: 
   flexdashboard::flex_dashboard:
     
@@ -657,7 +657,7 @@ hchart(
   "pie",
   hcaes(name = visit, y = Total)
 ) %>%
-  hc_title(text = "🍩 Interviews by Visit Round") %>%
+  hc_title(text = " Interviews by Visit Round") %>%
   hc_subtitle(text = "Donut chart showing interview counts per visit round of LRSP Monitoring Survey") %>%
   hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
   hc_plotOptions(
@@ -739,7 +739,7 @@ hchart(
   "pie",
   hcaes(name = woreda, y = Total)
 ) %>%
-  hc_title(text = "🥧 Interview Distribution by Woreda") %>%
+  hc_title(text = " Interview Distribution by Woreda") %>%
   hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
   hc_plotOptions(
     pie = list(
@@ -816,7 +816,7 @@ hchart(
   "pie",
   hcaes(name = visit, y = Total)
 ) %>%
-  hc_title(text = "🍩 Interviews by Visit Round") %>%
+  hc_title(text = " Interviews by Visit Round") %>%
   hc_subtitle(text = "Donut chart showing interview counts per visit round of LRSP Household Survey") %>%
   hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
   hc_plotOptions(
@@ -863,7 +863,7 @@ hchart(
   "pie",
   hcaes(name = kebele, y = Total)
 ) %>%
-  hc_title(text = "🥧 Interview Distribution by Kebele") %>%
+  hc_title(text = " Interview Distribution by Kebele") %>%
   hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
   hc_plotOptions(
     pie = list(
@@ -898,7 +898,7 @@ hchart(
   "pie",
   hcaes(name = woreda, y = Total)
 ) %>%
-  hc_title(text = "🥧 Interview Distribution by Woreda") %>%
+  hc_title(text = " Interview Distribution by Woreda") %>%
   hc_tooltip(pointFormat = "<b>{point.name}</b>: <b>{point.y}</b> interviews<br>({point.percentage:.1f}%)") %>%
   hc_plotOptions(
     pie = list(

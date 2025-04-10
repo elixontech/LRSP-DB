@@ -611,32 +611,50 @@ Row
 library(dplyr)
 library(highcharter)
 
-# Group and count interviews by 'visit'
+# Define visit order
+visit_levels <- c("First - Third Visit", "Second - Third Visit", 
+                  "Fourth Visit", "Fifth Visit", "Sixth Visit", "Seventh Visit")
+
+# Prepare data
 visit_summary <- data_mo %>%
   filter(!is.na(visit)) %>%
+  mutate(visit = factor(visit, levels = visit_levels)) %>%
   count(visit, name = "Total") %>%
-  arrange(desc(Total))
+  arrange(visit)
 
-# Plot bar chart
+# Create bar chart with zoom-out animation effect
 hchart(
   visit_summary,
-  "column",
-  hcaes(x = visit, y = Total),
-  color = "#28a745"  # Green color for style
+  type = "column",
+  hcaes(x = visit, y = Total)
 ) %>%
-  hc_title(text = "📋 Number of Interviews by Visit") %>%
+  hc_title(text = "📊 Number of Interviews by Visit") %>%
   hc_subtitle(text = "Bar chart showing count of interviews per visit round of LRSP Monitoring Survey") %>%
   hc_xAxis(title = list(text = "Visit Type")) %>%
-  hc_yAxis(title = list(text = "Number of Interviews"), min = 0) %>%
-  hc_tooltip(pointFormat = "<b>{point.visit}</b>: <b>{point.Total}</b> interviews") %>%
-  hc_plotOptions(column = list(
-    dataLabels = list(enabled = TRUE),
-    borderRadius = 3
-  )) %>%
+  hc_yAxis(title = list(text = "Number of Interviews")) %>%
+  hc_tooltip(pointFormat = "<b>{point.x}</b>: {point.y} interviews") %>%
+  hc_plotOptions(
+    column = list(
+      colorByPoint = TRUE,
+      dataLabels = list(
+        enabled = TRUE,
+        format = '{point.y}',
+        style = list(fontWeight = "bold")
+      ),
+      animation = list(
+        duration = 1200,
+        easing = "easeOutBounce"  # Simulates a bounce-style zoom-out
+      )
+    )
+  ) %>%
   hc_chart(
     backgroundColor = "#f5f7fa",
-    style = list(fontFamily = "Inter, sans-serif")
-  )
+    style = list(fontFamily = "Inter, sans-serif"),
+    animation = list(
+      duration = 1200
+    )
+  ) %>%
+  hc_colors(c("#28a745", "#FF6B6B", "#1E90FF", "#FFC107", "#8E44AD", "#00B894"))
 
 ```
 ### LRSP MONITORING SURVEY INTERVIEWS BY VISIT {data-width=300}
@@ -754,8 +772,6 @@ hchart(
   hc_chart(backgroundColor = "#f9f9f9")
 
 ```
-
-
 
 VISIT REPORT HH
 =====================================
@@ -911,6 +927,20 @@ hchart(
     )
   ) %>%
   hc_chart(backgroundColor = "#f9f9f9")
+
+```
+
+
+Test
+=====================================
+
+Row
+-----------------------------------------------------------------------
+
+### LRSP HH SURVEY INTERVIEWS BY VISIT {data-width=300}
+
+```{r}
+
 
 ```
 
